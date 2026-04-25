@@ -1,0 +1,62 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Manrope:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --font-headline: "Manrope", sans-serif;
+  --font-label: "Plus Jakarta Sans", sans-serif;
+  --font-mono: "JetBrains Mono", "Courier New", Courier, monospace;
+
+  --color-elegant-bg: #1A1A1A;
+  --color-elegant-card: #242424;
+  --color-elegant-border: #333333;
+  --color-elegant-text: #FFFFFF;
+  --color-elegant-dim: #A1A1A1;
+  --color-elegant-accent: #D4AF37;
+  --color-elegant-secondary: #C5A028;
+  --color-elegant-success: #10B981;
+  --color-elegant-danger: #EF4444;
+  --color-elegant-warning: #D4AF37;
+}
+
+@layer base {
+  body {
+    @apply bg-elegant-bg text-elegant-text font-sans antialiased;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-headline;
+  }
+}
+
+@layer components {
+  .glass-panel {
+    @apply bg-elegant-card border border-elegant-border shadow-sm rounded-lg;
+  }
+
+  .industrial-border {
+    @apply border border-elegant-border;
+  }
+
+  .data-label {
+    @apply text-[11px] uppercase tracking-wider text-elegant-dim font-label font-bold;
+  }
+
+  .data-value {
+    @apply font-mono text-elegant-text;
+  }
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-elegant-bg;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-elegant-border rounded-full hover:bg-elegant-dim/20 transition-colors;
+}

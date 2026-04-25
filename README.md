@@ -1,11 +1,39 @@
-<div align="center">
+# FleetFlow - Sistema de Gestão de Frota
 
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
+Sistema moderno de gerenciamento de frota desenvolvido com React, TypeScript e Tailwind CSS.
 
-  <h1>Built with AI Studio</h2>
+## 🚀 Funcionalidades
 
-  <p>The fastest path from prompt to production with Gemini.</p>
+- **Dashboard:** Visão geral de custos, quilometragem e status da frota.
+- **Gestão de Frota:** Controle total de veículos, placas, modelos e anos.
+- **Controle de Motoristas:** Status em tempo real (Disponível, Em Viagem, Agendado).
+- **Viagens:** Agendamento e monitoramento de rotas e cargas.
+- **Financeiro:** Controle de custos fixos, combustível, pedágios e impostos.
+- **Manutenção:** Alertas de manutenções preventivas e vencimento de seguro.
 
-  <a href="https://aistudio.google.com/apps">Start building</a>
+## 🛠️ Tecnologias Utilizadas
 
-</div>
+- [React](https://reactjs.org/)
+- [TypeScript](https://www.typescriptlang.org/)
+- [Tailwind CSS](https://tailwindcss.com/)
+- [Lucide React](https://lucide.dev/) (Ícones)
+- [Motion](https://motion.dev/) (Animações)
+- [Recharts](https://recharts.org/) (Gráficos)
+
+## 📦 Como Rodar o Projeto
+
+1. Instale as dependências:
+   ```bash
+   npm install
+   ```
+
+2. Inicie o servidor de desenvolvimento:
+   ```bash
+   npm run dev
+   ```
+
+3. Abra `http://localhost:3000` no seu navegador.
+
+## 📄 Licença
+
+Este projeto é para fins de demonstração e desenvolvimento.
