@@ -148,4 +148,30 @@ CREATE TRIGGER set_maintenance_records_updated_at
   BEFORE UPDATE ON maintenance_records
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
--- RLS desativado — sistema interno, acesso via chave anon
+-- ============================================
+-- ROW LEVEL SECURITY
+-- ============================================
+ALTER TABLE vehicles ENABLE ROW LEVEL SECURITY;
+ALTER TABLE drivers ENABLE ROW LEVEL SECURITY;
+ALTER TABLE trips ENABLE ROW LEVEL SECURITY;
+ALTER TABLE expenses ENABLE ROW LEVEL SECURITY;
+ALTER TABLE fuel_fillups ENABLE ROW LEVEL SECURITY;
+ALTER TABLE maintenance_records ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Enable all for authenticated" ON vehicles
+  FOR ALL USING (auth.role() = 'authenticated') WITH CHECK (auth.role() = 'authenticated');
+
+CREATE POLICY "Enable all for authenticated" ON drivers
+  FOR ALL USING (auth.role() = 'authenticated') WITH CHECK (auth.role() = 'authenticated');
+
+CREATE POLICY "Enable all for authenticated" ON trips
+  FOR ALL USING (auth.role() = 'authenticated') WITH CHECK (auth.role() = 'authenticated');
+
+CREATE POLICY "Enable all for authenticated" ON expenses
+  FOR ALL USING (auth.role() = 'authenticated') WITH CHECK (auth.role() = 'authenticated');
+
+CREATE POLICY "Enable all for authenticated" ON fuel_fillups
+  FOR ALL USING (auth.role() = 'authenticated') WITH CHECK (auth.role() = 'authenticated');
+
+CREATE POLICY "Enable all for authenticated" ON maintenance_records
+  FOR ALL USING (auth.role() = 'authenticated') WITH CHECK (auth.role() = 'authenticated');

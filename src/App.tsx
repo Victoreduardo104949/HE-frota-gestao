@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Sidebar, Header, ViewType } from './components/Navigation';
+import { AuthScreen } from './components/Auth';
 import { DashboardView } from './components/Dashboard';
 import { FleetView } from './components/Fleet';
 import { DriversView } from './components/Drivers';
@@ -115,9 +116,26 @@ function mapMaintenanceRecord(row: any): MaintenanceRecord {
 }
 
 export default function App() {
+  const [session, setSession] = useState<any>(null);
+  const [authLoading, setAuthLoading] = useState(true);
   const [activeView, setActiveView] = useState<ViewType>('dashboard');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      setAuthLoading(false);
+    });
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+    });
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const handleLogout = useCallback(async () => {
+    await supabase.auth.signOut();
+  }, []);
 
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [drivers, setDrivers] = useState<Driver[]>([]);
@@ -371,6 +389,18 @@ export default function App() {
     setMaintenanceRecords(prev => prev.filter(r => r.id !== id));
   }, []);
 
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-elegant-bg flex items-center justify-center">
+        <div className="animate-spin w-8 h-8 border-2 border-elegant-accent border-t-transparent rounded-full" />
+      </div>
+    );
+  }
+
+  if (!session) {
+    return <AuthScreen />;
+  }
+
   const renderView = () => {
     if (loading) {
       return (
@@ -507,10 +537,14 @@ export default function App() {
 
         <footer className="p-4 border-t border-elegant-border bg-elegant-bg/50 flex justify-between items-center text-[10px] font-mono text-elegant-dim">
           <div>© 2026 HE TRAVELS&TUORS • SISTEMA DE GESTÃO DE TRANSPORTES</div>
-          <div className="flex gap-4">
-            <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-elegant-success" /> SERVIDOR: SUPABASE</span>
-            <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-elegant-success" /> DATABASE: POSTGRES-PROD</span>
-            <span>VERSÃO: 2.4.0-STABLE</span>
+          <div className="flex items-center gap-4">
+            <span className="text-elegant-dim">{session.user.email}</span>
+            <button
+              onClick={handleLogout}
+              className="text-elegant-dim hover:text-elegant-danger transition-colors"
+            >
+              SAIR
+            </button>
           </div>
         </footer>
       </main>
