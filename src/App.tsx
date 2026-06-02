@@ -1,9 +1,4 @@
-/**
- * @license
- * SPDX-License-Identifier: Apache-2.0
- */
-
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Sidebar, Header, ViewType } from './components/Navigation';
 import { DashboardView } from './components/Dashboard';
 import { FleetView } from './components/Fleet';
@@ -11,15 +6,15 @@ import { DriversView } from './components/Drivers';
 import { TripsView } from './components/Trips';
 import { CostsView } from './components/Costs';
 import { FuelView } from './components/Fuel';
+import { supabase } from './lib/supabase';
 import { Card } from './components/UI';
 import { motion, AnimatePresence } from 'motion/react';
 import { Construction } from 'lucide-react';
-import { MOCK_EXPENSES, MOCK_VEHICLES, MOCK_TRIPS, MOCK_FUEL_FILLUPS, MOCK_DRIVERS, MOCK_MAINTENANCE } from './constants';
-import { Expense, Vehicle, Trip, FuelFillup, Driver, MaintenanceRecord } from './types';
+import { Vehicle, Driver, Trip, Expense, FuelFillup, MaintenanceRecord } from './types';
 import { generateAlerts } from './lib/alerts';
 
 const PlaceholderView = ({ title }: { title: string }) => (
-  <motion.div 
+  <motion.div
     initial={{ opacity: 0, y: 20 }}
     animate={{ opacity: 1, y: 0 }}
     className="h-[calc(100vh-12rem)] flex flex-col items-center justify-center text-center space-y-4"
@@ -39,73 +34,285 @@ const PlaceholderView = ({ title }: { title: string }) => (
   </motion.div>
 );
 
+function mapVehicle(row: any): Vehicle {
+  return {
+    id: row.id,
+    plate: row.plate,
+    model: row.model,
+    year: row.year,
+    status: row.status,
+    currentKm: Number(row.current_km),
+    costPerKm: Number(row.cost_per_km),
+    nextMaintenanceKm: row.next_maintenance_km ? Number(row.next_maintenance_km) : 0,
+    insuranceExpiry: row.insurance_expiry || '',
+  };
+}
+
+function mapDriver(row: any): Driver {
+  return {
+    id: row.id,
+    name: row.name,
+    cnh: row.cnh,
+    cnhExpiry: row.cnh_expiry,
+    status: row.status,
+    productivity: Number(row.productivity),
+    occurrences: Number(row.occurrences),
+  };
+}
+
+function mapTrip(row: any): Trip {
+  return {
+    id: row.id,
+    vehicleId: row.vehicle_id,
+    driverId: row.driver_id,
+    origin: row.origin,
+    destination: row.destination,
+    distance: Number(row.distance),
+    cargo: row.cargo || '',
+    revenue: Number(row.revenue),
+    cost: Number(row.cost),
+    margin: Number(row.margin),
+    date: row.date,
+    status: row.status,
+  };
+}
+
+function mapExpense(row: any): Expense {
+  return {
+    id: row.id,
+    vehicleId: row.vehicle_id || '',
+    category: row.category,
+    amount: Number(row.amount),
+    date: row.date,
+    description: row.description || '',
+    invoiceNumber: row.invoice_number || undefined,
+  };
+}
+
+function mapFuelFillup(row: any): FuelFillup {
+  return {
+    id: row.id,
+    vehicleId: row.vehicle_id,
+    date: row.date,
+    liters: Number(row.liters),
+    pricePerLiter: Number(row.price_per_liter),
+    totalAmount: Number(row.total_amount),
+    currentKm: Number(row.current_km),
+    stationName: row.station_name,
+  };
+}
+
+function mapMaintenanceRecord(row: any): MaintenanceRecord {
+  return {
+    id: row.id,
+    vehicleId: row.vehicle_id,
+    type: row.type,
+    description: row.description,
+    cost: Number(row.cost),
+    date: row.date,
+    status: row.status,
+  };
+}
+
 export default function App() {
   const [activeView, setActiveView] = useState<ViewType>('dashboard');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [expenses, setExpenses] = useState<Expense[]>(MOCK_EXPENSES);
-  const [vehicles, setVehicles] = useState<Vehicle[]>(MOCK_VEHICLES);
-  const [trips, setTrips] = useState<Trip[]>(MOCK_TRIPS);
-  const [fuelFillups, setFuelFillups] = useState<FuelFillup[]>(MOCK_FUEL_FILLUPS);
-  const [drivers, setDrivers] = useState<Driver[]>(MOCK_DRIVERS);
-  const [maintenanceRecords, setMaintenanceRecords] = useState<MaintenanceRecord[]>(MOCK_MAINTENANCE);
+  const [loading, setLoading] = useState(true);
+
+  const [vehicles, setVehicles] = useState<Vehicle[]>([]);
+  const [drivers, setDrivers] = useState<Driver[]>([]);
+  const [trips, setTrips] = useState<Trip[]>([]);
+  const [expenses, setExpenses] = useState<Expense[]>([]);
+  const [fuelFillups, setFuelFillups] = useState<FuelFillup[]>([]);
+  const [maintenanceRecords, setMaintenanceRecords] = useState<MaintenanceRecord[]>([]);
+
+  useEffect(() => {
+    async function loadData() {
+      try {
+        const [
+          { data: vehiclesData },
+          { data: driversData },
+          { data: tripsData },
+          { data: expensesData },
+          { data: fuelData },
+          { data: maintenanceData },
+        ] = await Promise.all([
+          supabase.from('vehicles').select('*'),
+          supabase.from('drivers').select('*'),
+          supabase.from('trips').select('*'),
+          supabase.from('expenses').select('*'),
+          supabase.from('fuel_fillups').select('*'),
+          supabase.from('maintenance_records').select('*'),
+        ]);
+
+        if (vehiclesData) setVehicles(vehiclesData.map(mapVehicle));
+        if (driversData) setDrivers(driversData.map(mapDriver));
+        if (tripsData) setTrips(tripsData.map(mapTrip));
+        if (expensesData) setExpenses(expensesData.map(mapExpense));
+        if (fuelData) setFuelFillups(fuelData.map(mapFuelFillup));
+        if (maintenanceData) setMaintenanceRecords(maintenanceData.map(mapMaintenanceRecord));
+      } catch (err) {
+        console.error('Failed to load data:', err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadData();
+  }, []);
 
   const alerts = generateAlerts(vehicles, drivers, maintenanceRecords);
   const alertCount = alerts.length;
 
-  const handleAddExpense = (newExpense: Expense) => {
-    setExpenses(prev => [newExpense, ...prev]);
-  };
+  const handleAddExpense = useCallback(async (newExpense: Expense) => {
+    const { data, error } = await supabase.from('expenses').insert({
+      vehicle_id: newExpense.vehicleId || null,
+      category: newExpense.category,
+      amount: newExpense.amount,
+      date: newExpense.date,
+      description: newExpense.description,
+      invoice_number: newExpense.invoiceNumber || null,
+    }).select().single();
 
-  const handleAddVehicle = (newVehicle: Vehicle) => {
-    setVehicles(prev => [newVehicle, ...prev]);
-  };
+    if (error) { console.error(error); return; }
+    setExpenses(prev => [mapExpense(data), ...prev]);
+  }, []);
 
-  const handleUpdateVehicle = (updatedVehicle: Vehicle) => {
+  const handleAddVehicle = useCallback(async (newVehicle: Vehicle) => {
+    const { data, error } = await supabase.from('vehicles').insert({
+      plate: newVehicle.plate,
+      model: newVehicle.model,
+      year: newVehicle.year,
+      status: newVehicle.status,
+      current_km: newVehicle.currentKm,
+      cost_per_km: newVehicle.costPerKm,
+      next_maintenance_km: newVehicle.nextMaintenanceKm,
+      insurance_expiry: newVehicle.insuranceExpiry || null,
+    }).select().single();
+
+    if (error) { console.error(error); return; }
+    setVehicles(prev => [mapVehicle(data), ...prev]);
+  }, []);
+
+  const handleUpdateVehicle = useCallback(async (updatedVehicle: Vehicle) => {
+    const { error } = await supabase.from('vehicles').update({
+      plate: updatedVehicle.plate,
+      model: updatedVehicle.model,
+      year: updatedVehicle.year,
+      status: updatedVehicle.status,
+      current_km: updatedVehicle.currentKm,
+      cost_per_km: updatedVehicle.costPerKm,
+      next_maintenance_km: updatedVehicle.nextMaintenanceKm,
+      insurance_expiry: updatedVehicle.insuranceExpiry || null,
+    }).eq('id', updatedVehicle.id);
+
+    if (error) { console.error(error); return; }
     setVehicles(prev => prev.map(v => v.id === updatedVehicle.id ? updatedVehicle : v));
-  };
+  }, []);
 
-  const handleDeleteVehicle = (vehicleId: string) => {
+  const handleDeleteVehicle = useCallback(async (vehicleId: string) => {
+    const { error } = await supabase.from('vehicles').delete().eq('id', vehicleId);
+    if (error) { console.error(error); return; }
     setVehicles(prev => prev.filter(v => v.id !== vehicleId));
-  };
+  }, []);
 
-  const handleAddTrip = (newTrip: Trip) => {
-    setTrips(prev => [newTrip, ...prev]);
-  };
+  const handleAddTrip = useCallback(async (newTrip: Trip) => {
+    const { data, error } = await supabase.from('trips').insert({
+      vehicle_id: newTrip.vehicleId,
+      driver_id: newTrip.driverId,
+      origin: newTrip.origin,
+      destination: newTrip.destination,
+      distance: newTrip.distance,
+      cargo: newTrip.cargo,
+      revenue: newTrip.revenue,
+      cost: newTrip.cost,
+      date: newTrip.date,
+      status: newTrip.status,
+    }).select().single();
 
-  const handleUpdateTrip = (updatedTrip: Trip) => {
+    if (error) { console.error(error); return; }
+    setTrips(prev => [mapTrip(data), ...prev]);
+  }, []);
+
+  const handleUpdateTrip = useCallback(async (updatedTrip: Trip) => {
+    const { error } = await supabase.from('trips').update({
+      status: updatedTrip.status,
+    }).eq('id', updatedTrip.id);
+
+    if (error) { console.error(error); return; }
     setTrips(prev => prev.map(t => t.id === updatedTrip.id ? updatedTrip : t));
-  };
+  }, []);
 
-  const handleAddFuelFillup = (newFillup: FuelFillup) => {
-    setFuelFillups(prev => [newFillup, ...prev]);
-  };
+  const handleAddFuelFillup = useCallback(async (newFillup: FuelFillup) => {
+    const { data, error } = await supabase.from('fuel_fillups').insert({
+      vehicle_id: newFillup.vehicleId,
+      date: newFillup.date,
+      liters: newFillup.liters,
+      price_per_liter: newFillup.pricePerLiter,
+      current_km: newFillup.currentKm,
+      station_name: newFillup.stationName,
+    }).select().single();
 
-  const handleAddDriver = (newDriver: Driver) => {
-    setDrivers(prev => [newDriver, ...prev]);
-  };
+    if (error) { console.error(error); return; }
+    setFuelFillups(prev => [mapFuelFillup(data), ...prev]);
+  }, []);
 
-  const handleUpdateDriver = (updatedDriver: Driver) => {
+  const handleAddDriver = useCallback(async (newDriver: Driver) => {
+    const { data, error } = await supabase.from('drivers').insert({
+      name: newDriver.name,
+      cnh: newDriver.cnh,
+      cnh_expiry: newDriver.cnhExpiry,
+      status: newDriver.status,
+      productivity: newDriver.productivity,
+      occurrences: newDriver.occurrences,
+    }).select().single();
+
+    if (error) { console.error(error); return; }
+    setDrivers(prev => [mapDriver(data), ...prev]);
+  }, []);
+
+  const handleUpdateDriver = useCallback(async (updatedDriver: Driver) => {
+    const { error } = await supabase.from('drivers').update({
+      name: updatedDriver.name,
+      cnh: updatedDriver.cnh,
+      cnh_expiry: updatedDriver.cnhExpiry,
+      status: updatedDriver.status,
+      productivity: updatedDriver.productivity,
+      occurrences: updatedDriver.occurrences,
+    }).eq('id', updatedDriver.id);
+
+    if (error) { console.error(error); return; }
     setDrivers(prev => prev.map(d => d.id === updatedDriver.id ? updatedDriver : d));
-  };
+  }, []);
 
-  const handleDeleteDriver = (driverId: string) => {
+  const handleDeleteDriver = useCallback(async (driverId: string) => {
+    const { error } = await supabase.from('drivers').delete().eq('id', driverId);
+    if (error) { console.error(error); return; }
     setDrivers(prev => prev.filter(d => d.id !== driverId));
-  };
+  }, []);
 
-  const handleAddMaintenance = (record: MaintenanceRecord) => {
-    setMaintenanceRecords(prev => [record, ...prev]);
-    
-    // Update vehicle status if in progress
+  const handleAddMaintenance = useCallback(async (record: MaintenanceRecord) => {
+    const { data, error } = await supabase.from('maintenance_records').insert({
+      vehicle_id: record.vehicleId,
+      type: record.type,
+      description: record.description,
+      cost: record.cost,
+      date: record.date,
+      status: record.status,
+    }).select().single();
+
+    if (error) { console.error(error); return; }
+    const mapped = mapMaintenanceRecord(data);
+    setMaintenanceRecords(prev => [mapped, ...prev]);
+
     if (record.status === 'in-progress') {
-      setVehicles(prev => prev.map(v => 
-        v.id === record.vehicleId ? { ...v, status: 'maintenance' } : v
+      setVehicles(prev => prev.map(v =>
+        v.id === record.vehicleId ? { ...v, status: 'maintenance' as const } : v
       ));
     }
 
-    // Also add to expenses if completed
     if (record.status === 'completed') {
       const newExpense: Expense = {
-        id: `maint-${record.id}`,
+        id: `maint-${mapped.id}`,
         vehicleId: record.vehicleId,
         category: 'maintenance',
         amount: record.cost,
@@ -113,27 +320,32 @@ export default function App() {
         description: `Manutenção: ${record.description}`,
       };
       setExpenses(prev => [newExpense, ...prev]);
-      
-      // Return vehicle to active if it was in maintenance
-      setVehicles(prev => prev.map(v => 
-        v.id === record.vehicleId ? { ...v, status: 'active' } : v
+      setVehicles(prev => prev.map(v =>
+        v.id === record.vehicleId ? { ...v, status: 'active' as const } : v
       ));
     }
-  };
+  }, []);
 
-  const handleUpdateMaintenance = (updatedRecord: MaintenanceRecord) => {
+  const handleUpdateMaintenance = useCallback(async (updatedRecord: MaintenanceRecord) => {
+    const oldRecord = maintenanceRecords.find(r => r.id === updatedRecord.id);
+
+    const { error } = await supabase.from('maintenance_records').update({
+      status: updatedRecord.status,
+      cost: updatedRecord.cost,
+      description: updatedRecord.description,
+    }).eq('id', updatedRecord.id);
+
+    if (error) { console.error(error); return; }
+
     setMaintenanceRecords(prev => {
-      const oldRecord = prev.find(r => r.id === updatedRecord.id);
       const newRecords = prev.map(r => r.id === updatedRecord.id ? updatedRecord : r);
-      
-      // If status changed to in-progress, update vehicle status
+
       if (oldRecord?.status !== 'in-progress' && updatedRecord.status === 'in-progress') {
-        setVehicles(prevVeh => prevVeh.map(v => 
+        setVehicles(prevVeh => prevVeh.map(v =>
           v.id === updatedRecord.vehicleId ? { ...v, status: 'maintenance' } : v
         ));
       }
 
-      // If status changed to completed, add to expenses and return vehicle to active
       if (oldRecord?.status !== 'completed' && updatedRecord.status === 'completed') {
         const newExpense: Expense = {
           id: `maint-${updatedRecord.id}`,
@@ -144,38 +356,47 @@ export default function App() {
           description: `Manutenção: ${updatedRecord.description}`,
         };
         setExpenses(prevExp => [newExpense, ...prevExp]);
-
-        setVehicles(prevVeh => prevVeh.map(v => 
+        setVehicles(prevVeh => prevVeh.map(v =>
           v.id === updatedRecord.vehicleId ? { ...v, status: 'active' } : v
         ));
       }
-      
+
       return newRecords;
     });
-  };
+  }, [maintenanceRecords]);
 
-  const handleDeleteMaintenance = (id: string) => {
+  const handleDeleteMaintenance = useCallback(async (id: string) => {
+    const { error } = await supabase.from('maintenance_records').delete().eq('id', id);
+    if (error) { console.error(error); return; }
     setMaintenanceRecords(prev => prev.filter(r => r.id !== id));
-  };
+  }, []);
 
   const renderView = () => {
+    if (loading) {
+      return (
+        <div className="h-[calc(100vh-12rem)] flex items-center justify-center">
+          <div className="animate-spin w-8 h-8 border-2 border-elegant-accent border-t-transparent rounded-full" />
+        </div>
+      );
+    }
+
     switch (activeView) {
       case 'dashboard':
         return (
-          <DashboardView 
-            vehicles={vehicles} 
-            drivers={drivers} 
-            trips={trips} 
+          <DashboardView
+            vehicles={vehicles}
+            drivers={drivers}
+            trips={trips}
             maintenance={maintenanceRecords}
             onNavigate={setActiveView}
           />
         );
       case 'fleet':
         return (
-          <FleetView 
-            vehicles={vehicles} 
-            onAddVehicle={handleAddVehicle} 
-            onUpdateVehicle={handleUpdateVehicle} 
+          <FleetView
+            vehicles={vehicles}
+            onAddVehicle={handleAddVehicle}
+            onUpdateVehicle={handleUpdateVehicle}
             onDeleteVehicle={handleDeleteVehicle}
             trips={trips}
             maintenance={maintenanceRecords}
@@ -184,10 +405,10 @@ export default function App() {
         );
       case 'drivers':
         return (
-          <DriversView 
-            drivers={drivers} 
-            onAddDriver={handleAddDriver} 
-            onUpdateDriver={handleUpdateDriver} 
+          <DriversView
+            drivers={drivers}
+            onAddDriver={handleAddDriver}
+            onUpdateDriver={handleUpdateDriver}
             onDeleteDriver={handleDeleteDriver}
             trips={trips}
             vehicles={vehicles}
@@ -195,9 +416,9 @@ export default function App() {
         );
       case 'trips':
         return (
-          <TripsView 
-            trips={trips} 
-            onAddTrip={handleAddTrip} 
+          <TripsView
+            trips={trips}
+            onAddTrip={handleAddTrip}
             onUpdateTrip={handleUpdateTrip}
             vehicles={vehicles}
             drivers={drivers}
@@ -205,9 +426,9 @@ export default function App() {
         );
       case 'expenses':
         return (
-          <CostsView 
-            expenses={expenses} 
-            onAddExpense={handleAddExpense} 
+          <CostsView
+            expenses={expenses}
+            onAddExpense={handleAddExpense}
             maintenanceRecords={maintenanceRecords}
             onAddMaintenance={handleAddMaintenance}
             onUpdateMaintenance={handleUpdateMaintenance}
@@ -227,10 +448,10 @@ export default function App() {
         return <PlaceholderView title="Configurações do Sistema" />;
       default:
         return (
-          <DashboardView 
-            vehicles={vehicles} 
-            drivers={drivers} 
-            trips={trips} 
+          <DashboardView
+            vehicles={vehicles}
+            drivers={drivers}
+            trips={trips}
             maintenance={maintenanceRecords}
             onNavigate={setActiveView}
           />
@@ -256,20 +477,20 @@ export default function App() {
 
   return (
     <div className="flex min-h-screen bg-elegant-bg">
-      <Sidebar 
-        activeView={activeView} 
-        onViewChange={setActiveView} 
+      <Sidebar
+        activeView={activeView}
+        onViewChange={setActiveView}
         isOpen={isSidebarOpen}
         onClose={() => setIsSidebarOpen(false)}
       />
-      
+
       <main className="flex-1 flex flex-col min-w-0">
-        <Header 
-          title={getViewTitle()} 
+        <Header
+          title={getViewTitle()}
           onMenuClick={() => setIsSidebarOpen(true)}
           alertCount={alertCount}
         />
-        
+
         <div className="flex-1 p-4 lg:p-8 overflow-y-auto">
           <AnimatePresence mode="wait">
             <motion.div
@@ -283,12 +504,12 @@ export default function App() {
             </motion.div>
           </AnimatePresence>
         </div>
-        
+
         <footer className="p-4 border-t border-elegant-border bg-elegant-bg/50 flex justify-between items-center text-[10px] font-mono text-elegant-dim">
           <div>© 2026 HE TRAVELS&TUORS • SISTEMA DE GESTÃO DE TRANSPORTES</div>
           <div className="flex gap-4">
-            <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-elegant-success" /> SERVIDOR: US-WEST-1</span>
-            <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-elegant-success" /> DATABASE: FIRESTORE-PROD</span>
+            <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-elegant-success" /> SERVIDOR: SUPABASE</span>
+            <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-elegant-success" /> DATABASE: POSTGRES-PROD</span>
             <span>VERSÃO: 2.4.0-STABLE</span>
           </div>
         </footer>
@@ -296,4 +517,3 @@ export default function App() {
     </div>
   );
 }
-
