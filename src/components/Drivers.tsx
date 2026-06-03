@@ -254,9 +254,9 @@ export const DriversView = ({ drivers, onAddDriver, onUpdateDriver, onDeleteDriv
                   />
                 </div>
 
-<div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                   <div className="space-y-1.5">
-                     <label className="text-[11px] font-bold text-elegant-dim uppercase">CNH</label>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-1.5">
+                    <label className="text-[11px] font-bold text-elegant-dim uppercase">CNH</label>
                     <input 
                       name="cnh" 
                       type="text" 
@@ -293,9 +293,9 @@ export const DriversView = ({ drivers, onAddDriver, onUpdateDriver, onDeleteDriv
                 </div>
 
                 {selectedDriver && (
-<div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                     <div className="space-y-1.5">
-                       <label className="text-[11px] font-bold text-elegant-dim uppercase">Produtividade (%)</label>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-1.5">
+                      <label className="text-[11px] font-bold text-elegant-dim uppercase">Produtividade (%)</label>
                       <input 
                         name="productivity" 
                         type="number" 

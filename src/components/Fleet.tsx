@@ -179,7 +179,7 @@ export const FleetView = ({ vehicles, onAddVehicle, onUpdateVehicle, onDeleteVeh
 
               <div className="p-6 space-y-6">
                 {detailsModalType === 'details' ? (
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  <div className="grid grid-cols-2 gap-6">
                     <div className="space-y-4">
                       <div>
                         <label className="text-[10px] font-bold text-elegant-dim uppercase block mb-1">Ano de Fabricação</label>
@@ -350,7 +350,7 @@ export const FleetView = ({ vehicles, onAddVehicle, onUpdateVehicle, onDeleteVeh
                 }}
                 className="p-6 space-y-4"
               >
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1.5">
                     <label className="text-[11px] font-bold text-elegant-dim uppercase">Placa</label>
                     <input name="plate" type="text" defaultValue={selectedVehicle.plate} className="w-full bg-elegant-bg border border-elegant-border rounded px-3 py-2 text-sm text-elegant-text focus:outline-none focus:border-elegant-accent" required />
@@ -375,7 +375,7 @@ export const FleetView = ({ vehicles, onAddVehicle, onUpdateVehicle, onDeleteVeh
                   </select>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1.5">
                     <label className="text-[11px] font-bold text-elegant-dim uppercase">KM Atual</label>
                     <input name="currentKm" type="number" defaultValue={selectedVehicle.currentKm} className="w-full bg-elegant-bg border border-elegant-border rounded px-3 py-2 text-sm text-elegant-text focus:outline-none focus:border-elegant-accent" required />
@@ -386,7 +386,7 @@ export const FleetView = ({ vehicles, onAddVehicle, onUpdateVehicle, onDeleteVeh
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1.5">
                     <label className="text-[11px] font-bold text-elegant-dim uppercase">Próx. Revisão (KM)</label>
                     <input name="nextMaintenanceKm" type="number" defaultValue={selectedVehicle.nextMaintenanceKm} className="w-full bg-elegant-bg border border-elegant-border rounded px-3 py-2 text-sm text-elegant-text focus:outline-none focus:border-elegant-accent" required />
@@ -397,30 +397,29 @@ export const FleetView = ({ vehicles, onAddVehicle, onUpdateVehicle, onDeleteVeh
                   </div>
                 </div>
 
-                <div className="pt-4 flex gap-2">
-                  <button 
-                    type="button"
-                    onClick={() => setIsEditModalOpen(false)}
-                    className="flex-1 py-2 text-xs font-bold text-elegant-dim hover:text-elegant-text border border-elegant-border rounded transition-colors"
-                  >
-                    CANCELAR
-                  </button>
-                  <button 
-                    type="submit"
-                    className="flex-1 py-2 text-xs font-bold bg-elegant-accent text-white rounded hover:bg-elegant-accent/90 transition-colors shadow-lg shadow-elegant-accent/20"
-                  >
-                    SALVAR ALTERAÇÕES
-                  </button>
-                </div>
-                <div className="pt-4 border-t border-elegant-border">
+                <div className="pt-4 flex gap-3">
                   <button 
                     type="button"
                     onClick={() => {
                       setIsDeleteConfirmOpen(true);
                     }}
-                    className="w-full py-2 text-xs font-bold text-elegant-danger hover:bg-elegant-danger/10 border border-elegant-danger/20 rounded transition-colors"
+                    className="px-4 py-2 text-xs font-bold text-elegant-danger hover:bg-elegant-danger/10 border border-elegant-danger/20 rounded transition-colors"
                   >
-                    REMOVER VEÍCULO
+                    REMOVER
+                  </button>
+                  <div className="flex-1" />
+                  <button 
+                    type="button"
+                    onClick={() => setIsEditModalOpen(false)}
+                    className="px-4 py-2 text-xs font-bold text-elegant-dim hover:text-elegant-text border border-elegant-border rounded transition-colors"
+                  >
+                    CANCELAR
+                  </button>
+                  <button 
+                    type="submit"
+                    className="px-4 py-2 text-xs font-bold bg-elegant-accent text-white rounded hover:bg-elegant-accent/90 transition-colors shadow-lg shadow-elegant-accent/20"
+                  >
+                    SALVAR ALTERAÇÕES
                   </button>
                 </div>
               </form>
@@ -507,7 +506,7 @@ export const FleetView = ({ vehicles, onAddVehicle, onUpdateVehicle, onDeleteVeh
                 }}
                 className="p-6 space-y-4"
               >
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1.5">
                     <label className="text-[11px] font-bold text-elegant-dim uppercase">Placa</label>
                     <input name="plate" type="text" className="w-full bg-elegant-bg border border-elegant-border rounded px-3 py-2 text-sm text-elegant-text focus:outline-none focus:border-elegant-accent" placeholder="ABC-1234" required />
@@ -523,7 +522,7 @@ export const FleetView = ({ vehicles, onAddVehicle, onUpdateVehicle, onDeleteVeh
                   <input name="model" type="text" className="w-full bg-elegant-bg border border-elegant-border rounded px-3 py-2 text-sm text-elegant-text focus:outline-none focus:border-elegant-accent" placeholder="Ex: Volvo FH 540" required />
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1.5">
                     <label className="text-[11px] font-bold text-elegant-dim uppercase">KM Atual</label>
                     <input name="currentKm" type="number" className="w-full bg-elegant-bg border border-elegant-border rounded px-3 py-2 text-sm text-elegant-text focus:outline-none focus:border-elegant-accent" placeholder="0" required />
@@ -534,7 +533,7 @@ export const FleetView = ({ vehicles, onAddVehicle, onUpdateVehicle, onDeleteVeh
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1.5">
                     <label className="text-[11px] font-bold text-elegant-dim uppercase">Próx. Revisão (KM)</label>
                     <input name="nextMaintenanceKm" type="number" className="w-full bg-elegant-bg border border-elegant-border rounded px-3 py-2 text-sm text-elegant-text focus:outline-none focus:border-elegant-accent" placeholder="0" required />

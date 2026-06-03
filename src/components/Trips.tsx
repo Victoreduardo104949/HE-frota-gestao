@@ -282,7 +282,7 @@ export const TripsView = ({ trips, onAddTrip, onUpdateTrip, vehicles, drivers }:
                 }}
                 className="p-6 space-y-6"
               >
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div className="grid grid-cols-2 gap-6">
                   {/* Route Section */}
                   <div className="space-y-4">
                     <h4 className="text-[10px] font-bold text-elegant-accent uppercase tracking-wider">Rota e Carga</h4>
@@ -294,7 +294,7 @@ export const TripsView = ({ trips, onAddTrip, onUpdateTrip, vehicles, drivers }:
                       <label className="text-[11px] font-bold text-elegant-dim uppercase">Destino</label>
                       <input name="destination" type="text" className="w-full bg-elegant-bg border border-elegant-border rounded px-3 py-2 text-sm text-elegant-text focus:outline-none focus:border-elegant-accent" placeholder="Cidade, UF" required />
                     </div>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-1.5">
                         <label className="text-[11px] font-bold text-elegant-dim uppercase">Distância (KM)</label>
                         <input name="distance" type="number" className="w-full bg-elegant-bg border border-elegant-border rounded px-3 py-2 text-sm text-elegant-text focus:outline-none focus:border-elegant-accent" placeholder="0" required />
@@ -366,7 +366,7 @@ export const TripsView = ({ trips, onAddTrip, onUpdateTrip, vehicles, drivers }:
                         </p>
                       )}
                     </div>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-1.5">
                         <label className="text-[11px] font-bold text-elegant-dim uppercase">Receita (R$)</label>
                         <input name="revenue" type="number" step="0.01" className="w-full bg-elegant-bg border border-elegant-border rounded px-3 py-2 text-sm text-elegant-text focus:outline-none focus:border-elegant-accent" placeholder="0,00" required />
