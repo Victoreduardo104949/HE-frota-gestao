@@ -28,6 +28,7 @@ import { formatCurrency, formatNumber, cn } from '../lib/utils';
 import { Card, StatCard } from './UI';
 import { FuelFillup, Vehicle } from '../types';
 import { motion, AnimatePresence } from 'motion/react';
+import { UserBadge } from './UserAvatar';
 
 const FUEL_PRICE_HISTORY = [
   { date: '01/04', price: 5.75 },
@@ -173,6 +174,7 @@ export const FuelView = ({ fillups, onAddFillup, vehicles }: FuelViewProps) => {
                 <th className="pb-3 text-[11px] font-bold text-elegant-dim uppercase tracking-wider px-2">Posto</th>
                 <th className="pb-3 text-[11px] font-bold text-elegant-dim uppercase tracking-wider px-2">Litros</th>
                 <th className="pb-3 text-[11px] font-bold text-elegant-dim uppercase tracking-wider px-2">R$/L</th>
+                <th className="pb-3 text-[11px] font-bold text-elegant-dim uppercase tracking-wider px-2">Criado por</th>
                 <th className="pb-3 text-[11px] font-bold text-elegant-dim uppercase tracking-wider px-2 text-right">Total</th>
               </tr>
             </thead>
@@ -192,6 +194,9 @@ export const FuelView = ({ fillups, onAddFillup, vehicles }: FuelViewProps) => {
                     <td className="py-3 px-2 text-xs text-elegant-text">{fillup.stationName}</td>
                     <td className="py-3 px-2 text-xs text-elegant-dim font-mono">{fillup.liters} L</td>
                     <td className="py-3 px-2 text-xs text-elegant-dim font-mono">R$ {fillup.pricePerLiter.toFixed(2)}</td>
+                    <td className="py-3 px-2">
+                      <UserBadge user={fillup.createdBy} />
+                    </td>
                     <td className="py-3 px-2 text-right text-xs font-bold text-elegant-text font-mono">
                       {formatCurrency(fillup.totalAmount)}
                     </td>

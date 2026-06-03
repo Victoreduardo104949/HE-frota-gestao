@@ -1,5 +1,10 @@
 export type VehicleStatus = 'active' | 'maintenance' | 'inactive' | 'alert';
 
+export interface CreatedBy {
+  id: string;
+  email: string;
+}
+
 export interface Vehicle {
   id: string;
   plate: string;
@@ -10,6 +15,8 @@ export interface Vehicle {
   costPerKm: number;
   nextMaintenanceKm: number;
   insuranceExpiry: string;
+  createdBy?: CreatedBy;
+  updatedBy?: CreatedBy;
 }
 
 export interface Driver {
@@ -18,8 +25,10 @@ export interface Driver {
   cnh: string;
   cnhExpiry: string;
   status: 'active' | 'on-trip' | 'vacation' | 'suspended';
-  productivity: number; // 0-100
+  productivity: number;
   occurrences: number;
+  createdBy?: CreatedBy;
+  updatedBy?: CreatedBy;
 }
 
 export interface Trip {
@@ -35,6 +44,8 @@ export interface Trip {
   margin: number;
   date: string;
   status: 'completed' | 'in-progress' | 'scheduled';
+  createdBy?: CreatedBy;
+  updatedBy?: CreatedBy;
 }
 
 export interface Expense {
@@ -45,6 +56,7 @@ export interface Expense {
   date: string;
   description: string;
   invoiceNumber?: string;
+  createdBy?: CreatedBy;
 }
 
 export interface FuelFillup {
@@ -56,6 +68,7 @@ export interface FuelFillup {
   totalAmount: number;
   currentKm: number;
   stationName: string;
+  createdBy?: CreatedBy;
 }
 
 export interface MaintenanceRecord {
@@ -66,6 +79,8 @@ export interface MaintenanceRecord {
   cost: number;
   date: string;
   status: 'pending' | 'completed' | 'in-progress';
+  createdBy?: CreatedBy;
+  updatedBy?: CreatedBy;
 }
 
 export interface KPI {

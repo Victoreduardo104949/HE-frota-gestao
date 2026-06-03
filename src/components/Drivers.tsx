@@ -6,6 +6,7 @@ import { Driver, Trip, Vehicle } from '../types';
 import { motion, AnimatePresence } from 'motion/react';
 import { formatCurrency } from '../lib/utils';
 import { generateAlerts } from '../lib/alerts';
+import { UserBadge } from './UserAvatar';
 
 interface DriversViewProps {
   drivers: Driver[];
@@ -200,7 +201,8 @@ export const DriversView = ({ drivers, onAddDriver, onUpdateDriver, onDeleteDriv
               </div>
             </div>
 
-            <div className="mt-6 pt-4 border-t border-elegant-border flex gap-2">
+            <UserBadge user={driver.createdBy} label="Criado por" className="justify-end mt-3" />
+            <div className="mt-3 pt-4 border-t border-elegant-border flex gap-2">
               <button 
                 onClick={() => handleOpenHistoryModal(driver)}
                 className="flex-1 py-1.5 text-[11px] font-bold bg-elegant-bg hover:bg-white/5 border border-elegant-border rounded transition-colors text-elegant-text"

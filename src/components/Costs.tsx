@@ -39,6 +39,7 @@ import {
 } from '../constants';
 import { motion, AnimatePresence } from 'motion/react';
 import { Expense, MaintenanceRecord, Vehicle } from '../types';
+import { UserBadge } from './UserAvatar';
 
 const CATEGORY_ICONS = {
   fuel: Fuel,
@@ -353,6 +354,7 @@ export const CostsView = ({
                       <tr className="border-b border-elegant-border">
                         <th className="pb-3 text-[11px] font-bold text-elegant-dim uppercase tracking-wider px-2">Data</th>
                         <th className="pb-3 text-[11px] font-bold text-elegant-dim uppercase tracking-wider px-2">Categoria</th>
+                        <th className="pb-3 text-[11px] font-bold text-elegant-dim uppercase tracking-wider px-2">Criado por</th>
                         <th className="pb-3 text-[11px] font-bold text-elegant-dim uppercase tracking-wider px-2 text-right">Valor</th>
                       </tr>
                     </thead>
@@ -366,6 +368,9 @@ export const CostsView = ({
                             <td className="py-3 px-2">
                               <span className="text-xs font-medium text-elegant-text">{CATEGORY_LABELS[expense.category]}</span>
                             </td>
+                            <td className="py-3 px-2">
+                              <UserBadge user={expense.createdBy} />
+                            </td>
                             <td className="py-3 px-2 text-right text-xs font-bold text-elegant-text font-mono">
                               {formatCurrency(expense.amount)}
                             </td>
@@ -374,7 +379,7 @@ export const CostsView = ({
                       })}
                       {expenses.length === 0 && (
                         <tr>
-                          <td colSpan={3} className="py-8 text-center text-xs text-elegant-dim italic">Nenhum lançamento encontrado</td>
+                          <td colSpan={4} className="py-8 text-center text-xs text-elegant-dim italic">Nenhum lançamento encontrado</td>
                         </tr>
                       )}
                     </tbody>
@@ -435,6 +440,7 @@ export const CostsView = ({
                         <th className="pb-3 text-[11px] font-bold text-elegant-dim uppercase tracking-wider px-2">Veículo</th>
                         <th className="pb-3 text-[11px] font-bold text-elegant-dim uppercase tracking-wider px-2">Tipo</th>
                         <th className="pb-3 text-[11px] font-bold text-elegant-dim uppercase tracking-wider px-2">Descrição</th>
+                        <th className="pb-3 text-[11px] font-bold text-elegant-dim uppercase tracking-wider px-2">Criado por</th>
                         <th className="pb-3 text-[11px] font-bold text-elegant-dim uppercase tracking-wider px-2">Status</th>
                         <th className="pb-3 text-[11px] font-bold text-elegant-dim uppercase tracking-wider px-2 text-right">Custo Est.</th>
                         <th className="pb-3 text-[11px] font-bold text-elegant-dim uppercase tracking-wider px-2 text-right">Ação</th>
@@ -443,7 +449,7 @@ export const CostsView = ({
                     <tbody className="divide-y divide-white/5">
                       {maintenanceRecords.length === 0 ? (
                         <tr>
-                          <td colSpan={6} className="py-8 text-center text-xs text-elegant-dim italic">Nenhuma ordem de serviço ativa</td>
+                          <td colSpan={7} className="py-8 text-center text-xs text-elegant-dim italic">Nenhuma ordem de serviço ativa</td>
                         </tr>
                       ) : (
                         maintenanceRecords.map((record) => {
@@ -464,6 +470,9 @@ export const CostsView = ({
                                 </span>
                               </td>
                               <td className="py-3 px-2 text-xs text-elegant-text">{record.description}</td>
+                              <td className="py-3 px-2">
+                                <UserBadge user={record.createdBy} />
+                              </td>
                               <td className="py-3 px-2">
                                 <div className="flex items-center gap-1.5">
                                   <div className={cn(

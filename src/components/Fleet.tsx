@@ -6,6 +6,7 @@ import { Vehicle, Trip, MaintenanceRecord } from '../types';
 import { motion, AnimatePresence } from 'motion/react';
 import { ViewType } from './Navigation';
 import { generateAlerts } from '../lib/alerts';
+import { UserBadge } from './UserAvatar';
 
 interface FleetViewProps {
   vehicles: Vehicle[];
@@ -119,7 +120,8 @@ export const FleetView = ({ vehicles, onAddVehicle, onUpdateVehicle, onDeleteVeh
                 </div>
               </div>
 
-              <div className="mt-6 pt-4 border-t border-elegant-border flex gap-2">
+              <UserBadge user={vehicle.createdBy} label="Criado por" className="justify-end mt-3" />
+              <div className="mt-3 pt-4 border-t border-elegant-border flex gap-2">
                 <button 
                   onClick={() => {
                     setSelectedVehicle(vehicle);

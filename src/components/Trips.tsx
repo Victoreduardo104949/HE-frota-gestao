@@ -4,6 +4,7 @@ import { MapPin, ArrowRight, Package, DollarSign, TrendingUp, Filter, Plus, Sear
 import { cn, formatCurrency, formatNumber } from '../lib/utils';
 import { Trip, Vehicle, Driver } from '../types';
 import { motion, AnimatePresence } from 'motion/react';
+import { UserBadge } from './UserAvatar';
 
 interface TripsViewProps {
   trips: Trip[];
@@ -133,6 +134,7 @@ export const TripsView = ({ trips, onAddTrip, onUpdateTrip, vehicles, drivers }:
                       <span className="text-xs font-mono text-elegant-dim">{formatNumber(trip.distance)} km</span>
                     </div>
                   </div>
+                  <UserBadge user={trip.createdBy} label="Criado por" className="mt-3" />
                 </div>
 
                 {/* Financial Info */}

@@ -35,6 +35,10 @@ const PlaceholderView = ({ title }: { title: string }) => (
   </motion.div>
 );
 
+function mapCreatedBy(email?: string | null) {
+  return email ? { id: email, email } : undefined;
+}
+
 function mapVehicle(row: any): Vehicle {
   return {
     id: row.id,
@@ -46,6 +50,8 @@ function mapVehicle(row: any): Vehicle {
     costPerKm: Number(row.cost_per_km),
     nextMaintenanceKm: row.next_maintenance_km ? Number(row.next_maintenance_km) : 0,
     insuranceExpiry: row.insurance_expiry || '',
+    createdBy: mapCreatedBy(row.created_by),
+    updatedBy: mapCreatedBy(row.updated_by),
   };
 }
 
@@ -58,6 +64,8 @@ function mapDriver(row: any): Driver {
     status: row.status,
     productivity: Number(row.productivity),
     occurrences: Number(row.occurrences),
+    createdBy: mapCreatedBy(row.created_by),
+    updatedBy: mapCreatedBy(row.updated_by),
   };
 }
 
@@ -75,6 +83,8 @@ function mapTrip(row: any): Trip {
     margin: Number(row.margin),
     date: row.date,
     status: row.status,
+    createdBy: mapCreatedBy(row.created_by),
+    updatedBy: mapCreatedBy(row.updated_by),
   };
 }
 
@@ -87,6 +97,7 @@ function mapExpense(row: any): Expense {
     date: row.date,
     description: row.description || '',
     invoiceNumber: row.invoice_number || undefined,
+    createdBy: mapCreatedBy(row.created_by),
   };
 }
 
@@ -100,6 +111,7 @@ function mapFuelFillup(row: any): FuelFillup {
     totalAmount: Number(row.total_amount),
     currentKm: Number(row.current_km),
     stationName: row.station_name,
+    createdBy: mapCreatedBy(row.created_by),
   };
 }
 
@@ -112,6 +124,8 @@ function mapMaintenanceRecord(row: any): MaintenanceRecord {
     cost: Number(row.cost),
     date: row.date,
     status: row.status,
+    createdBy: mapCreatedBy(row.created_by),
+    updatedBy: mapCreatedBy(row.updated_by),
   };
 }
 
@@ -181,6 +195,8 @@ export default function App() {
   const alerts = generateAlerts(vehicles, drivers, maintenanceRecords);
   const alertCount = alerts.length;
 
+  const userEmail = session?.user?.email || '';
+
   const handleAddExpense = useCallback(async (newExpense: Expense) => {
     const { data, error } = await supabase.from('expenses').insert({
       vehicle_id: newExpense.vehicleId || null,
@@ -189,11 +205,12 @@ export default function App() {
       date: newExpense.date,
       description: newExpense.description,
       invoice_number: newExpense.invoiceNumber || null,
+      created_by: userEmail,
     }).select().single();
 
     if (error) { console.error(error); return; }
     setExpenses(prev => [mapExpense(data), ...prev]);
-  }, []);
+  }, [userEmail]);
 
   const handleAddVehicle = useCallback(async (newVehicle: Vehicle) => {
     const { data, error } = await supabase.from('vehicles').insert({
@@ -205,11 +222,12 @@ export default function App() {
       cost_per_km: newVehicle.costPerKm,
       next_maintenance_km: newVehicle.nextMaintenanceKm,
       insurance_expiry: newVehicle.insuranceExpiry || null,
+      created_by: userEmail,
     }).select().single();
 
     if (error) { console.error(error); return; }
     setVehicles(prev => [mapVehicle(data), ...prev]);
-  }, []);
+  }, [userEmail]);
 
   const handleUpdateVehicle = useCallback(async (updatedVehicle: Vehicle) => {
     const { error } = await supabase.from('vehicles').update({
@@ -221,11 +239,12 @@ export default function App() {
       cost_per_km: updatedVehicle.costPerKm,
       next_maintenance_km: updatedVehicle.nextMaintenanceKm,
       insurance_expiry: updatedVehicle.insuranceExpiry || null,
+      updated_by: userEmail,
     }).eq('id', updatedVehicle.id);
 
     if (error) { console.error(error); return; }
     setVehicles(prev => prev.map(v => v.id === updatedVehicle.id ? updatedVehicle : v));
-  }, []);
+  }, [userEmail]);
 
   const handleDeleteVehicle = useCallback(async (vehicleId: string) => {
     const { error } = await supabase.from('vehicles').delete().eq('id', vehicleId);
@@ -245,20 +264,22 @@ export default function App() {
       cost: newTrip.cost,
       date: newTrip.date,
       status: newTrip.status,
+      created_by: userEmail,
     }).select().single();
 
     if (error) { console.error(error); return; }
     setTrips(prev => [mapTrip(data), ...prev]);
-  }, []);
+  }, [userEmail]);
 
   const handleUpdateTrip = useCallback(async (updatedTrip: Trip) => {
     const { error } = await supabase.from('trips').update({
       status: updatedTrip.status,
+      updated_by: userEmail,
     }).eq('id', updatedTrip.id);
 
     if (error) { console.error(error); return; }
     setTrips(prev => prev.map(t => t.id === updatedTrip.id ? updatedTrip : t));
-  }, []);
+  }, [userEmail]);
 
   const handleAddFuelFillup = useCallback(async (newFillup: FuelFillup) => {
     const { data, error } = await supabase.from('fuel_fillups').insert({
@@ -268,11 +289,12 @@ export default function App() {
       price_per_liter: newFillup.pricePerLiter,
       current_km: newFillup.currentKm,
       station_name: newFillup.stationName,
+      created_by: userEmail,
     }).select().single();
 
     if (error) { console.error(error); return; }
     setFuelFillups(prev => [mapFuelFillup(data), ...prev]);
-  }, []);
+  }, [userEmail]);
 
   const handleAddDriver = useCallback(async (newDriver: Driver) => {
     const { data, error } = await supabase.from('drivers').insert({
@@ -282,11 +304,12 @@ export default function App() {
       status: newDriver.status,
       productivity: newDriver.productivity,
       occurrences: newDriver.occurrences,
+      created_by: userEmail,
     }).select().single();
 
     if (error) { console.error(error); return; }
     setDrivers(prev => [mapDriver(data), ...prev]);
-  }, []);
+  }, [userEmail]);
 
   const handleUpdateDriver = useCallback(async (updatedDriver: Driver) => {
     const { error } = await supabase.from('drivers').update({
@@ -296,11 +319,12 @@ export default function App() {
       status: updatedDriver.status,
       productivity: updatedDriver.productivity,
       occurrences: updatedDriver.occurrences,
+      updated_by: userEmail,
     }).eq('id', updatedDriver.id);
 
     if (error) { console.error(error); return; }
     setDrivers(prev => prev.map(d => d.id === updatedDriver.id ? updatedDriver : d));
-  }, []);
+  }, [userEmail]);
 
   const handleDeleteDriver = useCallback(async (driverId: string) => {
     const { error } = await supabase.from('drivers').delete().eq('id', driverId);
@@ -316,6 +340,7 @@ export default function App() {
       cost: record.cost,
       date: record.date,
       status: record.status,
+      created_by: userEmail,
     }).select().single();
 
     if (error) { console.error(error); return; }
@@ -351,6 +376,7 @@ export default function App() {
       status: updatedRecord.status,
       cost: updatedRecord.cost,
       description: updatedRecord.description,
+      updated_by: userEmail,
     }).eq('id', updatedRecord.id);
 
     if (error) { console.error(error); return; }
