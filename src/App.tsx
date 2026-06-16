@@ -42,6 +42,7 @@ function mapCreatedBy(email?: string | null) {
 function mapVehicle(row: any): Vehicle {
   return {
     id: row.id,
+    name: row.name || row.plate,
     plate: row.plate,
     model: row.model,
     year: row.year,
@@ -112,6 +113,7 @@ function mapFuelFillup(row: any): FuelFillup {
     currentKm: Number(row.current_km),
     stationName: row.station_name,
     createdBy: mapCreatedBy(row.created_by),
+    updatedBy: mapCreatedBy(row.updated_by),
   };
 }
 
@@ -214,6 +216,7 @@ export default function App() {
 
   const handleAddVehicle = useCallback(async (newVehicle: Vehicle) => {
     const { data, error } = await supabase.from('vehicles').insert({
+      name: newVehicle.name || null,
       plate: newVehicle.plate,
       model: newVehicle.model,
       year: newVehicle.year,
@@ -231,6 +234,7 @@ export default function App() {
 
   const handleUpdateVehicle = useCallback(async (updatedVehicle: Vehicle) => {
     const { error } = await supabase.from('vehicles').update({
+      name: updatedVehicle.name || null,
       plate: updatedVehicle.plate,
       model: updatedVehicle.model,
       year: updatedVehicle.year,
@@ -287,6 +291,7 @@ export default function App() {
       date: newFillup.date,
       liters: newFillup.liters,
       price_per_liter: newFillup.pricePerLiter,
+      total_amount: newFillup.totalAmount,
       current_km: newFillup.currentKm,
       station_name: newFillup.stationName,
       created_by: userEmail,
@@ -294,7 +299,82 @@ export default function App() {
 
     if (error) { console.error(error); return; }
     setFuelFillups(prev => [mapFuelFillup(data), ...prev]);
+
+    // Create corresponding expense entry for fuel cost
+    const { data: expenseData, error: expenseError } = await supabase.from('expenses').insert({
+      vehicle_id: newFillup.vehicleId,
+      category: 'fuel',
+      amount: newFillup.totalAmount,
+      date: newFillup.date,
+      description: `Abastecimento - ${newFillup.stationName}`,
+      created_by: userEmail,
+    }).select().single();
+
+    if (!expenseError && expenseData) {
+      setExpenses(prev => [mapExpense(expenseData), ...prev]);
+    }
   }, [userEmail]);
+
+  const handleUpdateFuelFillup = useCallback(async (updatedFillup: FuelFillup) => {
+    const newTotal = updatedFillup.liters * updatedFillup.pricePerLiter;
+    const { error } = await supabase.from('fuel_fillups').update({
+      date: updatedFillup.date,
+      liters: updatedFillup.liters,
+      price_per_liter: updatedFillup.pricePerLiter,
+      total_amount: newTotal,
+      current_km: updatedFillup.currentKm,
+      station_name: updatedFillup.stationName,
+      updated_by: userEmail,
+    }).eq('id', updatedFillup.id);
+
+    if (error) { console.error(error); return; }
+    setFuelFillups(prev => prev.map(f =>
+      f.id === updatedFillup.id ? { ...updatedFillup, totalAmount: newTotal, updatedBy: mapCreatedBy(userEmail) } : f
+    ));
+
+    // Update corresponding expense
+    const { data: matchingExpenses } = await supabase.from('expenses')
+      .select('id')
+      .eq('category', 'fuel')
+      .eq('vehicle_id', updatedFillup.vehicleId)
+      .eq('date', updatedFillup.date);
+
+    if (matchingExpenses && matchingExpenses.length > 0) {
+      const expenseId = matchingExpenses[matchingExpenses.length - 1].id;
+      await supabase.from('expenses').update({
+        amount: newTotal,
+        description: `Abastecimento - ${updatedFillup.stationName}`,
+      }).eq('id', expenseId);
+
+      setExpenses(prev => prev.map(e =>
+        e.id === expenseId
+          ? { ...e, amount: newTotal, description: `Abastecimento - ${updatedFillup.stationName}` }
+          : e
+      ));
+    }
+  }, [userEmail]);
+
+  const handleDeleteFuelFillup = useCallback(async (fillupId: string) => {
+    const fillup = fuelFillups.find(f => f.id === fillupId);
+    if (!fillup) return;
+
+    const { error } = await supabase.from('fuel_fillups').delete().eq('id', fillupId);
+    if (error) { console.error(error); return; }
+    setFuelFillups(prev => prev.filter(f => f.id !== fillupId));
+
+    // Delete corresponding expense
+    const { data: matchingExpenses } = await supabase.from('expenses')
+      .select('id')
+      .eq('category', 'fuel')
+      .eq('vehicle_id', fillup.vehicleId)
+      .eq('date', fillup.date);
+
+    if (matchingExpenses && matchingExpenses.length > 0) {
+      const expenseId = matchingExpenses[matchingExpenses.length - 1].id;
+      await supabase.from('expenses').delete().eq('id', expenseId);
+      setExpenses(prev => prev.filter(e => e.id !== expenseId));
+    }
+  }, [fuelFillups]);
 
   const handleAddDriver = useCallback(async (newDriver: Driver) => {
     const { data, error } = await supabase.from('drivers').insert({
@@ -444,6 +524,7 @@ export default function App() {
             drivers={drivers}
             trips={trips}
             maintenance={maintenanceRecords}
+            expenses={expenses}
             onNavigate={setActiveView}
           />
         );
@@ -493,7 +574,7 @@ export default function App() {
           />
         );
       case 'fuel':
-        return <FuelView fillups={fuelFillups} onAddFillup={handleAddFuelFillup} vehicles={vehicles} />;
+        return <FuelView fillups={fuelFillups} onAddFillup={handleAddFuelFillup} onUpdateFillup={handleUpdateFuelFillup} onDeleteFillup={handleDeleteFuelFillup} vehicles={vehicles} />;
       case 'tolls':
         return <PlaceholderView title="Pedágios & Taxas" />;
       case 'contracts':
@@ -509,6 +590,7 @@ export default function App() {
             drivers={drivers}
             trips={trips}
             maintenance={maintenanceRecords}
+            expenses={expenses}
             onNavigate={setActiveView}
           />
         );

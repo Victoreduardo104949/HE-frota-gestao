@@ -76,7 +76,7 @@ export const FleetView = ({ vehicles, onAddVehicle, onUpdateVehicle, onDeleteVeh
                 </span>
               </div>
 
-              <h3 className="text-base font-bold text-elegant-text">{vehicle.plate}</h3>
+              <h3 className="text-base font-bold text-elegant-text">{vehicle.name}</h3>
               <p className="text-[11px] text-elegant-dim mb-6">{vehicle.model} • {vehicle.year}</p>
 
               <div className="space-y-3">
@@ -168,7 +168,7 @@ export const FleetView = ({ vehicles, onAddVehicle, onUpdateVehicle, onDeleteVeh
                     <Truck size={20} />
                   </div>
                   <div>
-                    <h3 className="text-lg font-bold text-elegant-text">{selectedVehicle.plate}</h3>
+                    <h3 className="text-lg font-bold text-elegant-text">{selectedVehicle.name}</h3>
                     <p className="text-[10px] text-elegant-dim uppercase font-bold tracking-wider">{selectedVehicle.model}</p>
                   </div>
                 </div>
@@ -335,6 +335,7 @@ export const FleetView = ({ vehicles, onAddVehicle, onUpdateVehicle, onDeleteVeh
                   const formData = new FormData(e.currentTarget);
                   const updatedVehicle: Vehicle = {
                     ...selectedVehicle,
+                    name: (formData.get('name') as string) || (formData.get('plate') as string),
                     plate: formData.get('plate') as string,
                     model: formData.get('model') as string,
                     year: Number(formData.get('year')),
@@ -350,6 +351,10 @@ export const FleetView = ({ vehicles, onAddVehicle, onUpdateVehicle, onDeleteVeh
                 }}
                 className="p-6 space-y-4"
               >
+                <div className="space-y-1.5">
+                  <label className="text-[11px] font-bold text-elegant-dim uppercase">Nome do Veículo</label>
+                  <input name="name" type="text" defaultValue={selectedVehicle.name} className="w-full bg-elegant-bg border border-elegant-border rounded px-3 py-2 text-sm text-elegant-text focus:outline-none focus:border-elegant-accent" placeholder="Ex: Carro 01" />
+                </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1.5">
                     <label className="text-[11px] font-bold text-elegant-dim uppercase">Placa</label>
@@ -443,7 +448,7 @@ export const FleetView = ({ vehicles, onAddVehicle, onUpdateVehicle, onDeleteVeh
               </div>
               <h3 className="text-lg font-bold text-elegant-text mb-2">Confirmar Remoção</h3>
               <p className="text-sm text-elegant-dim mb-6">
-                Tem certeza que deseja remover o veículo <span className="text-elegant-text font-bold">{selectedVehicle.plate}</span> da frota? Esta ação não pode ser desfeita.
+                Tem certeza que deseja remover o veículo <span className="text-elegant-text font-bold">{selectedVehicle.name}</span> da frota? Esta ação não pode ser desfeita.
               </p>
               <div className="flex gap-3">
                 <button 
@@ -492,6 +497,7 @@ export const FleetView = ({ vehicles, onAddVehicle, onUpdateVehicle, onDeleteVeh
                   const formData = new FormData(e.currentTarget);
                   const newVehicle: Vehicle = {
                     id: Math.random().toString(36).substr(2, 9),
+                    name: (formData.get('name') as string) || (formData.get('plate') as string),
                     plate: formData.get('plate') as string,
                     model: formData.get('model') as string,
                     year: Number(formData.get('year')),
@@ -506,6 +512,10 @@ export const FleetView = ({ vehicles, onAddVehicle, onUpdateVehicle, onDeleteVeh
                 }}
                 className="p-6 space-y-4"
               >
+                <div className="space-y-1.5">
+                  <label className="text-[11px] font-bold text-elegant-dim uppercase">Nome do Veículo</label>
+                  <input name="name" type="text" className="w-full bg-elegant-bg border border-elegant-border rounded px-3 py-2 text-sm text-elegant-text focus:outline-none focus:border-elegant-accent" placeholder="Ex: Carro 01" />
+                </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1.5">
                     <label className="text-[11px] font-bold text-elegant-dim uppercase">Placa</label>

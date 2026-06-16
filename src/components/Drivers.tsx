@@ -436,7 +436,7 @@ export const DriversView = ({ drivers, onAddDriver, onUpdateDriver, onDeleteDriv
                               </div>
                               <div>
                                 <p className="text-[9px] text-elegant-dim uppercase mb-1">Veículo</p>
-                                <p className="text-xs text-elegant-text font-medium">{vehicle ? `${vehicle.model} (${vehicle.plate})` : 'N/A'}</p>
+                                <p className="text-xs text-elegant-text font-medium">{vehicle ? vehicle.name : 'N/A'}</p>
                               </div>
                             </div>
                             

@@ -115,7 +115,7 @@ export const TripsView = ({ trips, onAddTrip, onUpdateTrip, vehicles, drivers }:
                     <div>
                       <p className="data-label mb-1.5">Veículo</p>
                       <div className="flex items-center gap-2">
-                        <span className="text-[11px] font-mono bg-elegant-bg border border-elegant-border px-1.5 py-0.5 rounded text-elegant-dim">{vehicle?.plate || 'N/A'}</span>
+                        <span className="text-[11px] font-mono bg-elegant-bg border border-elegant-border px-1.5 py-0.5 rounded text-elegant-dim">{vehicle?.name || vehicle?.plate || 'N/A'}</span>
                       </div>
                     </div>
                     <div>
@@ -326,7 +326,7 @@ export const TripsView = ({ trips, onAddTrip, onUpdateTrip, vehicles, drivers }:
                               disabled={isMaintenance}
                               className={isMaintenance ? "text-elegant-dim" : ""}
                             >
-                              {v.plate} - {v.model} {isMaintenance ? '(EM MANUTENÇÃO)' : ''}
+                              {v.name} - {v.plate} {isMaintenance ? '(EM MANUTENÇÃO)' : ''}
                             </option>
                           );
                         })}

@@ -7,6 +7,7 @@ export interface CreatedBy {
 
 export interface Vehicle {
   id: string;
+  name: string;
   plate: string;
   model: string;
   year: number;
@@ -69,6 +70,7 @@ export interface FuelFillup {
   currentKm: number;
   stationName: string;
   createdBy?: CreatedBy;
+  updatedBy?: CreatedBy;
 }
 
 export interface MaintenanceRecord {

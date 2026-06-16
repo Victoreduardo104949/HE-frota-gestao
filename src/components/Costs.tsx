@@ -458,7 +458,7 @@ export const CostsView = ({
                             <tr key={record.id} className="hover:bg-white/[0.02] transition-colors">
                               <td className="py-3 px-2">
                                 <span className="font-mono text-[11px] bg-elegant-bg border border-elegant-border px-1.5 py-0.5 rounded text-elegant-dim">
-                                  {vehicle?.plate || 'Geral'}
+                                  {vehicle?.name || vehicle?.plate || 'Geral'}
                                 </span>
                               </td>
                               <td className="py-3 px-2">
@@ -532,7 +532,7 @@ export const CostsView = ({
                     return (
                       <div key={vehicle.id} className="p-3 rounded bg-elegant-bg border border-elegant-border group hover:border-elegant-accent/30 transition-colors">
                         <div className="flex justify-between items-start mb-2">
-                          <span className="text-xs font-bold text-elegant-text">{vehicle.plate}</span>
+                          <span className="text-xs font-bold text-elegant-text">{vehicle.name}</span>
                           <span className={cn(
                             "text-[9px] font-bold px-1.5 py-0.5 rounded",
                             isUrgent ? "bg-elegant-danger/10 text-elegant-danger" : "bg-elegant-warning/10 text-elegant-warning"
@@ -606,7 +606,7 @@ export const CostsView = ({
                   <select name="vehicleId" className="w-full bg-elegant-bg border border-elegant-border rounded px-3 py-2 text-sm text-elegant-text focus:outline-none focus:border-elegant-accent" required>
                     <option value="">Selecione um veículo</option>
                     {vehicles.map(v => (
-                      <option key={v.id} value={v.id}>{v.plate} - {v.model}</option>
+                      <option key={v.id} value={v.id}>{v.name} - {v.plate}</option>
                     ))}
                   </select>
                 </div>
@@ -696,7 +696,7 @@ export const CostsView = ({
                   <select name="vehicleId" className="w-full bg-elegant-bg border border-elegant-border rounded px-3 py-2 text-sm text-elegant-text focus:outline-none focus:border-elegant-accent" required>
                     <option value="">Selecione um veículo</option>
                     {vehicles.map(v => (
-                      <option key={v.id} value={v.id}>{v.plate} - {v.model}</option>
+                      <option key={v.id} value={v.id}>{v.name} - {v.plate}</option>
                     ))}
                     <option value="general">Geral / Administrativo</option>
                   </select>

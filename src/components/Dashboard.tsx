@@ -15,9 +15,8 @@ import { StatCard, Card } from './UI';
 import { motion } from 'motion/react';
 import { AlertTriangle, ArrowRight, Truck, MapPin, Calendar, AlertCircle, Info } from 'lucide-react';
 import { formatCurrency, formatNumber, cn } from '../lib/utils';
-import { Vehicle, Driver, Trip, KPI, MaintenanceRecord } from '../types';
+import { Vehicle, Driver, Trip, KPI, MaintenanceRecord, Expense } from '../types';
 import { generateAlerts, AppAlert } from '../lib/alerts';
-import { COST_BY_CATEGORY } from '../constants';
 
 const COLORS = ['#D4AF37', '#C5A028', '#E5C158', '#B38F1D', '#8C6F15'];
 
@@ -26,15 +25,18 @@ interface DashboardViewProps {
   drivers: Driver[];
   trips: Trip[];
   maintenance: MaintenanceRecord[];
+  expenses: Expense[];
   onNavigate: (view: any) => void;
 }
 
-export const DashboardView = ({ vehicles, drivers, trips, maintenance, onNavigate }: DashboardViewProps) => {
+export const DashboardView = ({ vehicles, drivers, trips, maintenance, expenses, onNavigate }: DashboardViewProps) => {
   const alerts = generateAlerts(vehicles, drivers, maintenance);
   
   // Calculate dynamic KPIs
   const totalRevenue = trips.reduce((acc, t) => acc + t.revenue, 0);
-  const totalCost = trips.reduce((acc, t) => acc + t.cost, 0);
+  const tripCosts = trips.reduce((acc, t) => acc + t.cost, 0);
+  const expenseCosts = expenses.reduce((acc, e) => acc + e.amount, 0);
+  const totalCost = tripCosts + expenseCosts;
   const avgMargin = trips.length > 0 ? (trips.reduce((acc, t) => acc + (t.margin / t.revenue), 0) / trips.length) * 100 : 0;
   const activeTrips = trips.filter(t => t.status === 'in-progress').length;
 
@@ -44,6 +46,21 @@ export const DashboardView = ({ vehicles, drivers, trips, maintenance, onNavigat
     { label: 'Margem Média', value: `${avgMargin.toFixed(1)}%`, change: 5.2, trend: 'up' },
     { label: 'Viagens em Curso', value: activeTrips, change: 0, trend: 'neutral' },
   ];
+
+  // Dynamic cost distribution chart data from expenses
+  const expenseCategories: Record<string, { name: string; value: number; color: string }> = {
+    fuel: { name: 'Combustível', value: 0, color: '#3B82F6' },
+    maintenance: { name: 'Manutenção', value: 0, color: '#6366F1' },
+    toll: { name: 'Pedágios', value: 0, color: '#A855F7' },
+    tax: { name: 'Taxas/Impostos', value: 0, color: '#EC4899' },
+    other: { name: 'Outros', value: 0, color: '#F59E0B' },
+  };
+  expenses.forEach(e => {
+    if (expenseCategories[e.category]) {
+      expenseCategories[e.category].value += e.amount;
+    }
+  });
+  const dynamicCostByCategory = Object.values(expenseCategories);
 
   const latestTrips = [...trips].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()).slice(0, 5);
 
@@ -74,34 +91,34 @@ export const DashboardView = ({ vehicles, drivers, trips, maintenance, onNavigat
         <Card title="Distribuição de Custos por Categoria" subtitle="R$/km" className="lg:col-span-2">
           <div className="h-[280px] w-full mt-4">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={COST_BY_CATEGORY} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#333333" vertical={false} />
-                <XAxis 
-                  dataKey="name" 
-                  stroke="#A1A1A1" 
-                  fontSize={10} 
-                  tickLine={false} 
-                  axisLine={false} 
-                  fontFamily="Inter"
-                />
-                <YAxis 
-                  stroke="#A1A1A1" 
-                  fontSize={10} 
-                  tickLine={false} 
-                  axisLine={false} 
-                  fontFamily="JetBrains Mono"
-                  tickFormatter={(value) => `R$ ${value / 1000}k`}
-                />
-                <Tooltip 
-                  contentStyle={{ backgroundColor: '#242424', border: '1px solid #333333', borderRadius: '6px' }}
-                  itemStyle={{ color: '#FFFFFF', fontFamily: 'Inter', fontSize: '12px' }}
-                  cursor={{ fill: 'rgba(255,255,255,0.02)' }}
-                />
-                <Bar dataKey="value" radius={[4, 4, 0, 0]} barSize={40}>
-                  {COST_BY_CATEGORY.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} fillOpacity={0.8} />
-                  ))}
-                </Bar>
+                <BarChart data={dynamicCostByCategory} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#333333" vertical={false} />
+                  <XAxis 
+                    dataKey="name" 
+                    stroke="#A1A1A1" 
+                    fontSize={10} 
+                    tickLine={false} 
+                    axisLine={false} 
+                    fontFamily="Inter"
+                  />
+                  <YAxis 
+                    stroke="#A1A1A1" 
+                    fontSize={10} 
+                    tickLine={false} 
+                    axisLine={false} 
+                    fontFamily="JetBrains Mono"
+                    tickFormatter={(value) => `R$ ${value / 1000}k`}
+                  />
+                  <Tooltip 
+                    contentStyle={{ backgroundColor: '#242424', border: '1px solid #333333', borderRadius: '6px' }}
+                    itemStyle={{ color: '#FFFFFF', fontFamily: 'Inter', fontSize: '12px' }}
+                    cursor={{ fill: 'rgba(255,255,255,0.02)' }}
+                  />
+                  <Bar dataKey="value" radius={[4, 4, 0, 0]} barSize={40}>
+                    {dynamicCostByCategory.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} fillOpacity={0.8} />
+                    ))}
+                  </Bar>
               </BarChart>
             </ResponsiveContainer>
           </div>
@@ -182,7 +199,7 @@ export const DashboardView = ({ vehicles, drivers, trips, maintenance, onNavigat
                   </td>
                   <td className="py-3 px-2">
                     <span className="font-mono text-[11px] bg-elegant-bg border border-elegant-border px-1.5 py-0.5 rounded text-elegant-dim">
-                      {vehicles.find(v => v.id === trip.vehicleId)?.plate}
+                      {vehicles.find(v => v.id === trip.vehicleId)?.name}
                     </span>
                   </td>
                   <td className="py-3 px-2 text-xs text-elegant-dim">{formatCurrency(trip.cost)}</td>

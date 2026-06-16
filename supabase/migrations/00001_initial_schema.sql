@@ -79,7 +79,7 @@ CREATE TABLE fuel_fillups (
   date DATE NOT NULL,
   liters NUMERIC(10,2) NOT NULL CHECK (liters > 0),
   price_per_liter NUMERIC(8,2) NOT NULL CHECK (price_per_liter > 0),
-  total_amount NUMERIC(12,2) GENERATED ALWAYS AS (liters * price_per_liter) STORED,
+  total_amount NUMERIC(12,2) NOT NULL,
   current_km NUMERIC(10,2) NOT NULL,
   station_name TEXT NOT NULL,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()

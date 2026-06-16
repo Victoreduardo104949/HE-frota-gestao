@@ -22,9 +22,11 @@ import {
   Gauge,
   X,
   Calendar,
-  MapPin
+  MapPin,
+  Edit2,
+  Trash2
 } from 'lucide-react';
-import { formatCurrency, formatNumber, cn } from '../lib/utils';
+import { formatCurrency, formatNumber, cn, exportToExcel } from '../lib/utils';
 import { Card, StatCard } from './UI';
 import { FuelFillup, Vehicle } from '../types';
 import { motion, AnimatePresence } from 'motion/react';
@@ -42,11 +44,36 @@ const FUEL_PRICE_HISTORY = [
 interface FuelViewProps {
   fillups: FuelFillup[];
   onAddFillup: (fillup: FuelFillup) => void;
+  onUpdateFillup?: (fillup: FuelFillup) => void;
+  onDeleteFillup?: (id: string) => void;
   vehicles: Vehicle[];
 }
 
-export const FuelView = ({ fillups, onAddFillup, vehicles }: FuelViewProps) => {
+export const FuelView = ({ fillups, onAddFillup, onUpdateFillup, onDeleteFillup, vehicles }: FuelViewProps) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editingFillup, setEditingFillup] = useState<FuelFillup | null>(null);
+
+  const handleDownloadReport = () => {
+    const headers = ['Data', 'Veículo', 'Placa', 'Posto', 'Litros', 'Preço/L', 'Valor Total', 'KM Atual'];
+    const rows = fillups.map(f => {
+      const v = vehicles.find(veh => veh.id === f.vehicleId);
+      return [
+        new Date(f.date).toLocaleDateString('pt-BR'),
+        v?.name || '',
+        v?.plate || '',
+        f.stationName,
+        formatNumber(f.liters),
+        formatCurrency(f.pricePerLiter),
+        formatCurrency(f.totalAmount),
+        formatNumber(f.currentKm),
+      ];
+    });
+    const totalLiters = fillups.reduce((a, f) => a + f.liters, 0);
+    const totalAmount = fillups.reduce((a, f) => a + f.totalAmount, 0);
+    rows.push(['', '', 'TOTAL', '', formatNumber(totalLiters), '', formatCurrency(totalAmount), '']);
+    exportToExcel(`relatorio-combustivel-${new Date().toISOString().split('T')[0]}`, headers, rows);
+  };
 
   const totalLiters = fillups.reduce((acc, curr) => acc + curr.liters, 0);
   const totalCost = fillups.reduce((acc, curr) => acc + curr.totalAmount, 0);
@@ -60,7 +87,7 @@ export const FuelView = ({ fillups, onAddFillup, vehicles }: FuelViewProps) => {
           <p className="text-xs text-elegant-dim mt-1">Monitoramento de consumo, preços e eficiência da frota</p>
         </div>
         <div className="flex gap-2 w-full sm:w-auto">
-          <button className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-3 py-1.5 bg-elegant-card border border-elegant-border rounded text-xs font-medium hover:bg-white/5 transition-colors text-elegant-text">
+          <button onClick={handleDownloadReport} className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-3 py-1.5 bg-elegant-card border border-elegant-border rounded text-xs font-medium hover:bg-white/5 transition-colors text-elegant-text">
             <Download size={14} /> Relatório
           </button>
           <button 
@@ -147,7 +174,7 @@ export const FuelView = ({ fillups, onAddFillup, vehicles }: FuelViewProps) => {
               return (
                 <div key={vehicle.id} className="space-y-1.5">
                   <div className="flex justify-between items-center text-[11px]">
-                    <span className="font-mono text-elegant-text">{vehicle.plate}</span>
+                    <span className="font-mono text-elegant-text">{vehicle.name}</span>
                     <span className="font-bold text-elegant-accent">{efficiency.toFixed(2)} km/L</span>
                   </div>
                   <div className="w-full h-1.5 bg-elegant-bg rounded-full overflow-hidden">
@@ -176,19 +203,20 @@ export const FuelView = ({ fillups, onAddFillup, vehicles }: FuelViewProps) => {
                 <th className="pb-3 text-[11px] font-bold text-elegant-dim uppercase tracking-wider px-2">R$/L</th>
                 <th className="pb-3 text-[11px] font-bold text-elegant-dim uppercase tracking-wider px-2">Criado por</th>
                 <th className="pb-3 text-[11px] font-bold text-elegant-dim uppercase tracking-wider px-2 text-right">Total</th>
+                <th className="pb-3 text-[11px] font-bold text-elegant-dim uppercase tracking-wider px-2 text-right">Ações</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-white/5">
               {fillups.map((fillup) => {
                 const vehicle = vehicles.find(v => v.id === fillup.vehicleId);
                 return (
-                  <tr key={fillup.id} className="hover:bg-white/[0.02] transition-colors">
+                  <tr key={fillup.id} className="hover:bg-white/[0.02] transition-colors group">
                     <td className="py-3 px-2 text-xs text-elegant-dim font-mono">
                       {new Date(fillup.date).toLocaleDateString('pt-BR')}
                     </td>
                     <td className="py-3 px-2">
                       <span className="font-mono text-[11px] bg-elegant-bg border border-elegant-border px-1.5 py-0.5 rounded text-elegant-dim">
-                        {vehicle?.plate}
+                        {vehicle?.name}
                       </span>
                     </td>
                     <td className="py-3 px-2 text-xs text-elegant-text">{fillup.stationName}</td>
@@ -199,6 +227,24 @@ export const FuelView = ({ fillups, onAddFillup, vehicles }: FuelViewProps) => {
                     </td>
                     <td className="py-3 px-2 text-right text-xs font-bold text-elegant-text font-mono">
                       {formatCurrency(fillup.totalAmount)}
+                    </td>
+                    <td className="py-3 px-2 text-right">
+                      <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <button
+                          onClick={() => { setEditingFillup(fillup); setIsEditModalOpen(true); }}
+                          className="text-elegant-dim hover:text-elegant-accent transition-colors"
+                          title="Editar"
+                        >
+                          <Edit2 size={14} />
+                        </button>
+                        <button
+                          onClick={() => { onDeleteFillup?.(fillup.id); }}
+                          className="text-elegant-dim hover:text-elegant-danger transition-colors"
+                          title="Remover"
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 );
@@ -252,7 +298,7 @@ export const FuelView = ({ fillups, onAddFillup, vehicles }: FuelViewProps) => {
                   <select name="vehicleId" className="w-full bg-elegant-bg border border-elegant-border rounded px-3 py-2 text-sm text-elegant-text focus:outline-none focus:border-elegant-accent" required>
                     <option value="">Selecione um veículo</option>
                     {vehicles.map(v => (
-                      <option key={v.id} value={v.id}>{v.plate} - {v.model}</option>
+                      <option key={v.id} value={v.id}>{v.name} - {v.plate}</option>
                     ))}
                   </select>
                 </div>
@@ -297,6 +343,104 @@ export const FuelView = ({ fillups, onAddFillup, vehicles }: FuelViewProps) => {
                     className="flex-1 py-2 text-xs font-bold bg-elegant-accent text-white rounded hover:bg-elegant-accent/90 transition-colors shadow-lg shadow-elegant-accent/20"
                   >
                     REGISTRAR
+                  </button>
+                </div>
+              </form>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Edit Fillup Modal */}
+      <AnimatePresence>
+        {isEditModalOpen && editingFillup && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="w-full max-w-md bg-elegant-card border border-elegant-border rounded-lg shadow-2xl overflow-hidden"
+            >
+              <div className="p-6 border-b border-elegant-border flex justify-between items-center">
+                <h3 className="text-lg font-bold text-elegant-text">Editar Abastecimento</h3>
+                <button onClick={() => { setIsEditModalOpen(false); setEditingFillup(null); }} className="text-elegant-dim hover:text-elegant-text">
+                  <X size={20} />
+                </button>
+              </div>
+              
+              <form 
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  const formData = new FormData(e.currentTarget);
+                  const liters = Number(formData.get('liters'));
+                  const pricePerLiter = Number(formData.get('pricePerLiter'));
+                  
+                  const updatedFillup: FuelFillup = {
+                    ...editingFillup,
+                    vehicleId: formData.get('vehicleId') as string,
+                    date: formData.get('date') as string,
+                    liters: liters,
+                    pricePerLiter: pricePerLiter,
+                    totalAmount: liters * pricePerLiter,
+                    currentKm: Number(formData.get('currentKm')),
+                    stationName: formData.get('stationName') as string,
+                  };
+                  onUpdateFillup?.(updatedFillup);
+                  setIsEditModalOpen(false);
+                  setEditingFillup(null);
+                }}
+                className="p-6 space-y-4"
+              >
+                <div className="space-y-1.5">
+                  <label className="text-[11px] font-bold text-elegant-dim uppercase">Veículo</label>
+                  <select name="vehicleId" defaultValue={editingFillup.vehicleId} className="w-full bg-elegant-bg border border-elegant-border rounded px-3 py-2 text-sm text-elegant-text focus:outline-none focus:border-elegant-accent" required>
+                    <option value="">Selecione um veículo</option>
+                    {vehicles.map(v => (
+                      <option key={v.id} value={v.id}>{v.name} - {v.plate}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-1.5">
+                    <label className="text-[11px] font-bold text-elegant-dim uppercase">Data</label>
+                    <input name="date" type="date" defaultValue={editingFillup.date} className="w-full bg-elegant-bg border border-elegant-border rounded px-3 py-2 text-sm text-elegant-text focus:outline-none focus:border-elegant-accent" required />
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-[11px] font-bold text-elegant-dim uppercase">KM Atual</label>
+                    <input name="currentKm" type="number" defaultValue={editingFillup.currentKm} className="w-full bg-elegant-bg border border-elegant-border rounded px-3 py-2 text-sm text-elegant-text focus:outline-none focus:border-elegant-accent" placeholder="0" required />
+                  </div>
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-[11px] font-bold text-elegant-dim uppercase">Posto de Combustível</label>
+                  <input name="stationName" type="text" defaultValue={editingFillup.stationName} className="w-full bg-elegant-bg border border-elegant-border rounded px-3 py-2 text-sm text-elegant-text focus:outline-none focus:border-elegant-accent" placeholder="Ex: Posto Graal" required />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-1.5">
+                    <label className="text-[11px] font-bold text-elegant-dim uppercase">Litros</label>
+                    <input name="liters" type="number" step="0.01" defaultValue={editingFillup.liters} className="w-full bg-elegant-bg border border-elegant-border rounded px-3 py-2 text-sm text-elegant-text focus:outline-none focus:border-elegant-accent" placeholder="0.00" required />
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-[11px] font-bold text-elegant-dim uppercase">Preço por Litro (R$)</label>
+                    <input name="pricePerLiter" type="number" step="0.01" defaultValue={editingFillup.pricePerLiter} className="w-full bg-elegant-bg border border-elegant-border rounded px-3 py-2 text-sm text-elegant-text focus:outline-none focus:border-elegant-accent" placeholder="0.00" required />
+                  </div>
+                </div>
+
+                <div className="pt-4 flex gap-3">
+                  <button 
+                    type="button"
+                    onClick={() => { setIsEditModalOpen(false); setEditingFillup(null); }}
+                    className="flex-1 py-2 text-xs font-bold text-elegant-dim hover:text-elegant-text border border-elegant-border rounded transition-colors"
+                  >
+                    CANCELAR
+                  </button>
+                  <button 
+                    type="submit"
+                    className="flex-1 py-2 text-xs font-bold bg-elegant-accent text-white rounded hover:bg-elegant-accent/90 transition-colors shadow-lg shadow-elegant-accent/20"
+                  >
+                    SALVAR ALTERAÇÕES
                   </button>
                 </div>
               </form>
